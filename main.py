@@ -5,5 +5,5 @@ b=st.selectbox('사용하는 계좌 은행을 선택해주세요',['토스','우
 if st.button('응모 결과'):
   st.write(a+'님! 그대는 해킹 당햇스ㅅㅂ니다ㅜㅜ!')
   st.info('이리 둔하실 수가')
-  st.warning(b+'1조를 앋아가겠다 ㅅㅂ니다')
+  st.warning(b+' 1조를 앋아가겠다 ㅅㅂ니다')
   st.error('gg욤❤️❤️❤️')

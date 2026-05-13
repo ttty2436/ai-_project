@@ -7,4 +7,4 @@ if st.button('응모 결과'):
   st.info('이리 둔하실 수가')
   st.warning(b+' 1조 앙 ㄱㅁㄸ!!')
   st.error('gg ㅋ ㅋ ㅋ ㅋ ㅋ ㅋ ㅋ ㅋ ㅋ ㅋ ㅋ ㅋㅋ ㅋ ㅋ ㅋ ㅋ ')
-  st.baiions()
+  st.ballons()

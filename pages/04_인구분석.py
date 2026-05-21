@@ -5,17 +5,15 @@ import os
 
 # 🎀 1. 상큼키치 공주풍 페이지 세팅
 st.set_page_config(
-    page_title="키치발랄 인구 스튜디오", 
+    page_title="Kitsch Population Studio", 
     page_icon="🔮",
     layout="wide"
 )
 
-# 🎨 2. 하이틴 하이라이트 키치 CSS 스타일링
-st.markdown("""
-    <style>
+# 🎨 2. SyntaxError 완벽 방어형 스타일 주입 (st.html 사용으로 파이썬 매직 실수를 원천 차단!)
+st.html("""
+<style>
     @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
-    
-    /* 타이틀 감성 */
     .title-txt {
         color: #ff3377 !important;
         font-family: 'Jua', sans-serif;
@@ -24,29 +22,22 @@ st.markdown("""
         text-align: center;
         margin-bottom: 5px;
     }
-    
     .sub-txt {
-        color: #4ea8de;
+        color: #4ea8de !important;
         font-weight: bold;
         text-align: center;
         margin-bottom: 25px;
     }
-
-    /* 반짝이는 메트릭 카드 */
     .stMetric {
         border: 3px solid #ffb7c5 !important;
         border-radius: 20px !important;
         padding: 20px !important;
         box-shadow: 5px 5px 0px #ffb7c5 !important;
-        transition: transform 0.2s;
     }
-    .stMetric:hover {
-        transform: scale(1.03);
-    }
-    </style>
-""", unsafe_allow_html=True)
+</style>
+""")
 
-# 💕 타이틀 구역 (SyntaxError 유발 가능성 있는 특수 서체 텍스트 제거 완료!)
+# 💕 타이틀 구역
 st.markdown("<div class='title-txt'>💖 Kitsch 인구 하이라이트 🧃 💖</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-txt'>(｡♥‿♥｡) 다크모드에서도 눈부신 키치 비주얼 오픈! ✧*｡</div>", unsafe_allow_html=True)
 st.markdown("---")
@@ -95,4 +86,22 @@ if df_source is not None:
     df_regions['지역명'] = df_regions['행정구역'].apply(lambda x: x.split('(')[0].strip())
 
     # 4. 하이틴 스냅샷 보드
-    if not df
+    if not df_total.empty:
+        st.markdown("### 🏹 Today's 대한민국 스냅샷 (*ˊᗜˋ*) ✨")
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            st.metric(label="🧸 총 인구수 (명)", value=f"{int(df_total['2026년04월_총인구수'].values[0]):,}")
+        with c2:
+            st.metric(label="🍰 총 세대수 (가구)", value=f"{int(df_total['2026년04월_세대수'].values[0]):,}")
+        with c3:
+            st.metric(label="🍡 오순도순 세대당 인구", value=f"{df_total['2026년04월_세대당 인구'].values[0]:.2f}명")
+        with c4:
+            st.metric(label="🦄 황금 남녀 비율", value=f"{df_total['2026년04월_남여 비율'].values[0]:.2f}")
+    
+    st.markdown("---")
+
+    # 5. 오늘의 팝 비주얼 그래프 구역 ⚡
+    st.markdown("### 🌈 STEP 2. 톡톡 튀는 비주얼 그래프 타임 🎡")
+    
+    topic = st.radio(
+        "어떤 깜찍한 트렌드를 훔쳐볼까요? 👀",

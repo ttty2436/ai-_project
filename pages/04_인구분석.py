@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import os
 
 # 🎀 1. 상큼키치 공주풍 페이지 세팅
 st.set_page_config(
@@ -53,19 +54,35 @@ st.markdown("<div class='title-txt'>💖 𝓚𝓲𝓽𝓼𝓬𝓱 인구 하이�
 st.markdown("<div class='sub-txt'>(｡♥‿♥｡) 칙칙한 숫자는 𝓝𝓞! 우리 동네 인구수 상콤하게 체킷-! ✧*｡</div>", unsafe_allow_html=True)
 st.markdown("---")
 
-# 📥 3. 스트림릿 클라우드 전용 상큼 업로더
-st.subheader("🧁 STEP 1. 다운받은 CSV 파일을 먹여주세요! ✨")
-uploaded_file = st.file_uploader(
-    "여기에 인구현황 CSV 파일을 요정처럼 쏙- 던져주세요 🧚", 
-    type=["csv"]
-)
+# 기본 파일명 설정
+DEFAULT_FILE = "202604_202604_주민등록인구및세대현황_월간.csv"
+df_source = None
 
-if uploaded_file is not None:
-    # 데이터 로드 (인코딩 자동 방어벽 💖)
+# 만약 깃허브에 파일이 이미 업로드되어 있다면 자동으로 읽기 🤖✨
+if os.path.exists(DEFAULT_FILE):
     try:
-        df = pd.read_csv(uploaded_file, encoding='utf-8')
+        df_source = pd.read_csv(DEFAULT_FILE, encoding='utf-8')
     except Exception:
-        df = pd.read_csv(uploaded_file, encoding='cp949')
+        df_source = pd.read_csv(DEFAULT_FILE, encoding='cp949')
+    st.success("✨ 깃허브에서 인구수 데이터를 자동으로 쏙- 불러왔어요! 편리하죠? 😎")
+else:
+    # 깃허브에 파일이 없을 때만 업로더 창 띄우기!
+    st.subheader("🧁 STEP 1. 다운받은 CSV 파일을 먹여주세요! ✨")
+    uploaded_file = st.file_uploader(
+        "여기에 인구현황 CSV 파일을 요정처럼 쏙- 던져주세요 🧚", 
+        type=["csv"]
+    )
+    if uploaded_file is not None:
+        try:
+            df_source = pd.read_csv(uploaded_file, encoding='utf-8')
+        except Exception:
+            # ⭐ 바로 이 부분! 오류 방지를 위해 파일 읽기 위치를 처음(0)으로 되돌려줍니다!
+            uploaded_file.seek(0)
+            df_source = pd.read_csv(uploaded_file, encoding='cp949')
+
+# 데이터가 무사히 로드되었을 때만 화면 그리기 짜잔- 🎉
+if df_source is not None:
+    df = df_source.copy()
 
     # 공백 털어내기 명수링 🧹
     df.columns = df.columns.str.strip()
@@ -86,9 +103,9 @@ if uploaded_file is not None:
     df_regions = df[~df['행정구역'].str.contains('전국', na=False)].copy()
     df_regions['지역명'] = df_regions['행정구역'].apply(lambda x: x.split('(')[0].strip())
 
-    # 4. 하이틴 스냅샷 보드 (대문짝만하게!)
+    # 4. 하이틴 스냅샷 보드
     if not df_total.empty:
-        st.markdown("### 🏹 𝓣𝓸𝓭𝓪𝔂'𝓼 대한민국 스냅샷 (*ˊᗜˋ*) ✨")
+        st.markdown("### 🏹 Sub-𝓣𝓸𝓭𝓪𝔂'𝓼 대한민국 스냅샷 (*ˊᗜˋ*) ✨")
         c1, c2, c3, c4 = st.columns(4)
         with c1:
             st.metric(label="🧸 총 인구수 (명)", value=f"{int(df_total['2026년04월_총인구수'].values[0]):,}")
@@ -112,7 +129,6 @@ if uploaded_file is not None:
 
     # 파스텔 & 네온 키치 컬러 패키지 정의 🎨
     kitsch_pink = "#ff007f"   # 핫체리핑크
-    kitsch_mint = "#00f5d4"   # 네온민트
     kitsch_purple = "#9b5de5" # 하이틴퍼플
     kitsch_blue = "#00bbf9"   # 소다블루
 
@@ -146,7 +162,7 @@ if uploaded_file is not None:
                       color_discrete_map={'남자 인구수': kitsch_blue, '여자 인구수': kitsch_pink})
         fig.update_traces(line=dict(width=4), marker=dict(size=10))
 
-    # 그래프 뒷배경도 투명하고 힙하게 세팅 바이브 조정 🎧
+    # 그래프 뒷배경 바이브 조정 🎧
     fig.update_layout(
         plot_bgcolor='rgba(255, 249, 251, 0.5)',
         paper_bgcolor='rgba(0,0,0,0)',
@@ -168,8 +184,8 @@ if uploaded_file is not None:
         final_df[['지역명', '2026년04월_총인구수', '2026년04월_세대수', '2026년04월_세대당 인구', '2026년04월_남자 인구수', '2026년04월_여자 인구수']], 
         use_container_width=True
     )
-    st.balloons() # 파일 업로드 성공 기념 풍선 팡팡🎈
+    st.balloons() # 업로드나 자동 로드 성공 시 풍선 팡팡🎈
 
 else:
-    # 파일 안올렸을 때 뜨는 귀여운 대기화면 🦄
-    st.info("💡 아기 요정님! 상단의 업로드 박스에 CSV 파일을 쏙 넣어주시면 마법 대시보드가 열려요! (기다리는 중... ⏱️✨)")
+    # 데이터가 아예 없을 때 대기화면
+    st.info("💡 아기 요정님! 깃허브에 파일이 없거나 업로드가 안 되었어요. 상단의 박스에 CSV 파일을 쏙 넣어주세요! (기다리는 중... ⏱️✨)")

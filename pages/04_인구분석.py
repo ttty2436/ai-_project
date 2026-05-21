@@ -76,7 +76,7 @@ else:
         try:
             df_source = pd.read_csv(uploaded_file, encoding='utf-8')
         except Exception:
-            # ⭐ 바로 이 부분! 오류 방지를 위해 파일 읽기 위치를 처음(0)으로 되돌려줍니다!
+            # 오류 방지를 위해 파일 읽기 위치를 처음(0)으로 되돌려줍니다!
             uploaded_file.seek(0)
             df_source = pd.read_csv(uploaded_file, encoding='cp949')
 
@@ -105,7 +105,7 @@ if df_source is not None:
 
     # 4. 하이틴 스냅샷 보드
     if not df_total.empty:
-        st.markdown("### 🏹 Sub-𝓣𝓸𝓭𝓪𝔂'𝓼 대한민국 스냅샷 (*ˊᗜˋ*) ✨")
+        st.markdown("### 🏹 Today's 대한민국 스냅샷 (*ˊᗜˋ*) ✨")
         c1, c2, c3, c4 = st.columns(4)
         with c1:
             st.metric(label="🧸 총 인구수 (명)", value=f"{int(df_total['2026년04월_총인구수'].values[0]):,}")
@@ -162,13 +162,23 @@ if df_source is not None:
                       color_discrete_map={'남자 인구수': kitsch_blue, '여자 인구수': kitsch_pink})
         fig.update_traces(line=dict(width=4), marker=dict(size=10))
 
-    # 그래프 뒷배경 바이브 조정 🎧
+    # ⭐ [오류 해결 패치] 폰트 사양과 테마 스타일을 엄격하고 예쁘게 재정비!
     fig.update_layout(
         plot_bgcolor='rgba(255, 249, 251, 0.5)',
         paper_bgcolor='rgba(0,0,0,0)',
-        xaxis=dict(showgrid=True, gridcolor='#ffe3ed', tickfont=dict(size=12, bold=True)),
-        yaxis=dict(showgrid=True, gridcolor='#ffe3ed'),
-        font=dict(size=13)
+        xaxis=dict(
+            showgrid=True, 
+            gridcolor='#ffe3ed', 
+            tickfont=dict(size=12, color='#333333', family='sans-serif')
+        ),
+        yaxis=dict(
+            showgrid=True, 
+            gridcolor='#ffe3ed',
+            tickfont=dict(size=12, color='#333333', family='sans-serif')
+        ),
+        title=dict(
+            font=dict(size=18, color='#ff007f', family='sans-serif')
+        )
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -184,8 +194,7 @@ if df_source is not None:
         final_df[['지역명', '2026년04월_총인구수', '2026년04월_세대수', '2026년04월_세대당 인구', '2026년04월_남자 인구수', '2026년04월_여자 인구수']], 
         use_container_width=True
     )
-    st.balloons() # 업로드나 자동 로드 성공 시 풍선 팡팡🎈
+    st.balloons() # 리로드 성공 축하풍선 팡팡!
 
 else:
-    # 데이터가 아예 없을 때 대기화면
     st.info("💡 아기 요정님! 깃허브에 파일이 없거나 업로드가 안 되었어요. 상단의 박스에 CSV 파일을 쏙 넣어주세요! (기다리는 중... ⏱️✨)")

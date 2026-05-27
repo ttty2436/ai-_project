@@ -3,198 +3,56 @@ import pandas as pd
 import plotly.express as px
 import os
 
-# 🎀 1. 상큼키치 공주풍 페이지 세팅
-st.set_page_config(
-    page_title="인구 스튜디오", 
-    page_icon="🔮",
-    layout="wide"
-)
+st.set_page_config(page_title="인구 분석 통계", layout="wide")
 
-# 🎨 2. 하이틴 하이라이트 키치 CSS 스타일링
-st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
-    
-    .main { background-color: #fff9fb; } /* 베이비 핑크빛 크림 배경 */
-    
-    /* 타이틀 감성 */
-    .title-txt {
-        color: #ff3377 !important;
-        font-family: 'Jua', sans-serif;
-        font-size: 45px !important;
-        text-shadow: 3px 3px 0px #ffcc00;
-        text-align: center;
-        margin-bottom: 5px;
-    }
-    
-    .sub-txt {
-        color: #4ea8de;
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 25px;
-    }
-
-    /* 상큼 발랄 반짝이는 메트릭 카드 */
-    .stMetric {
-        background: #ffffff !important;
-        border: 3px solid #ffb7c5 !important;
-        border-radius: 20px !important;
-        padding: 20px !important;
-        box-shadow: 5px 5px 0px #ffb7c5 !important;
-        transition: transform 0.2s;
-    }
-    .stMetric:hover {
-        transform: scale(1.03);
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# 💕 타이틀 구역
-st.markdown("<div class='title-txt'>💖 𝓚𝓲𝓽𝓼𝓬𝓱 인구 하이라이트 🧃 💖</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-txt'>(｡♥‿♥｡) 칙칙한 숫자는 𝓝𝓞! 우리 동네 인구수 상콤하게 체킷-! ✧*｡</div>", unsafe_allow_html=True)
+st.title("주민등록 인구 통계 대시보드")
 st.markdown("---")
 
-# 기본 파일명 설정
 DEFAULT_FILE = "202604_202604_주민등록인구및세대현황_월간.csv"
 df_source = None
 
-# 만약 깃허브에 파일이 이미 업로드되어 있다면 자동으로 읽기 🤖✨
 if os.path.exists(DEFAULT_FILE):
     try:
-        df_source = pd.read_csv(DEFAULT_FILE, encoding='utf-8')
-    except Exception:
-        df_source = pd.read_csv(DEFAULT_FILE, encoding='cp949')
-    st.success("✨ 깃허브에서 인구수 데이터를 자동으로 쏙- 불러왔어요! 편리하죠? 😎")
+        df_source = pd.read_csv(DEFAULT_FILE, encoding="utf-8")
+    except:
+        df_source = pd.read_csv(DEFAULT_FILE, encoding="cp949")
 else:
-    # 깃허브에 파일이 없을 때만 업로더 창 띄우기!
-    st.subheader("🧁 STEP 1. 다운받은 CSV 파일을 먹여주세요! ✨")
-    uploaded_file = st.file_uploader(
-        "여기에 인구현황 CSV 파일을 요정처럼 쏙- 던져주세요 🧚", 
-        type=["csv"]
-    )
+    st.subheader("파일 업로드")
+    uploaded_file = st.file_uploader("인구현황 CSV 파일을 업로드해주세요.", type=["csv"])
     if uploaded_file is not None:
         try:
-            df_source = pd.read_csv(uploaded_file, encoding='utf-8')
-        except Exception:
-            # 오류 방지를 위해 파일 읽기 위치를 처음(0)으로 되돌려줍니다!
+            df_source = pd.read_csv(uploaded_file, encoding="utf-8")
+        except:
             uploaded_file.seek(0)
-            df_source = pd.read_csv(uploaded_file, encoding='cp949')
+            df_source = pd.read_csv(uploaded_file, encoding="cp949")
 
-# 데이터가 무사히 로드되었을 때만 화면 그리기 짜잔- 🎉
 if df_source is not None:
     df = df_source.copy()
-
-    # 공백 털어내기 명수링 🧹
     df.columns = df.columns.str.strip()
     
-    cols_to_convert = [
-        '2026년04월_총인구수', '2026년04월_세대수', 
-        '2026년04월_남자 인구수', '2026년04월_여자 인구수', 
-        '2026년04월_세대당 인구', '2026년04월_남여 비율'
+    target_cols = [
+        "2026년04월_총인구수", "2026년04월_세대수", 
+        "2026년04월_남자 인구수", "2026년04월_여자 인구수", 
+        "2026년04월_세대당 인구", "2026년04월_남여 비율"
     ]
     
-    for col in cols_to_convert:
+    for col in target_cols:
         if col in df.columns:
-            df[col] = df[col].astype(str).str.replace(',', '').str.strip()
-            df[col] = pd.to_numeric(df[col], errors='coerce')
+            df[col] = df[col].astype(str).str.replace(",", "").str.strip()
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+            
+    df_total = df[df["행정구역"].str.contains("전국", na=False)]
+    df_regions = df[~df["행정구역"].str.contains("전국", na=False)].copy()
+    df_regions["지역명"] = df_regions["행정구역"].apply(lambda x: x.split("(")[0].strip())
 
-    # 전국 vs 지역 쪼개기 🔪✨
-    df_total = df[df['행정구역'].str.contains('전국', na=False)]
-    df_regions = df[~df['행정구역'].str.contains('전국', na=False)].copy()
-    df_regions['지역명'] = df_regions['행정구역'].apply(lambda x: x.split('(')[0].strip())
-
-    # 4. 하이틴 스냅샷 보드
     if not df_total.empty:
-        st.markdown("### 🏹 Today's 대한민국 스냅샷 (*ˊᗜˋ*) ✨")
+        st.subheader("전국 현황")
         c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            st.metric(label="🧸 총 인구수 (명)", value=f"{int(df_total['2026년04월_총인구수'].values[0]):,}")
-        with c2:
-            st.metric(label="🍰 총 세대수 (가구)", value=f"{int(df_total['2026년04월_세대수'].values[0]):,}")
-        with c3:
-            st.metric(label="🍡 오순도순 세대당 인구", value=f"{df_total['2026년04월_세대당 인구'].values[0]:.2f}명")
-        with c4:
-            st.metric(label="🦄 황금 남녀 비율", value=f"{df_total['2026년04월_남여 비율'].values[0]:.2f}")
-    
-    st.markdown("---")
-
-    # 5. 오늘의 팝(Pop!) 크러시 꺾은선 그래프 구역 ⚡
-    st.markdown("### 🌈 STEP 2. 톡톡 튀는 비주얼 그래프 타임 🎡")
-    
-    topic = st.radio(
-        "어떤 깜찍한 트렌드를 꺾은선으로 훔쳐볼까요? 👀",
-        ["총인구수", "세대수", " 남녀 밸런스"],
-        horizontal=True
-    )
-
-    # 파스텔 & 네온 키치 컬러 패키지 정의 🎨
-    kitsch_pink = "#ff007f"   # 핫체리핑크
-    kitsch_purple = "#9b5de5" # 하이틴퍼플
-    kitsch_blue = "#00bbf9"   # 소다블루
-
-    if topic == "🍭 영차영차 총인구수":
-        fig = px.line(df_regions, x='지역명', y='2026년04월_총인구수', 
-                      title="📈 인구수 트렌드 라인 ✧*｡", 
-                      markers=True)
-        fig.update_traces(
-            line=dict(color=kitsch_pink, width=5), 
-            marker=dict(size=12, color='#ffffff', line=dict(width=3, color=kitsch_pink))
-        )
         
-    elif topic == "🔮 하트시그널 세대수":
-        fig = px.line(df_regions, x='지역명', y='2026년04월_세대수', 
-                      title="세대수 트렌드 라인 ✧*｡", 
-                      markers=True)
-        fig.update_traces(
-            line=dict(color=kitsch_purple, width=5), 
-            marker=dict(size=12, color='#ffffff', line=dict(width=3, color=kitsch_purple))
-        )
+        val1 = "{:,}".format(int(df_total["2026년04월_총인구수"].values[0]))
+        val2 = "{:,}".format(int(df_total["2026년04월_세대수'].values[0]))
+        val3 = "{:.2f}명".format(df_total["2026년04월_세대당 인구"].values[0])
+        val4 = "{:.2f}".format(df_total["2026년04월_남여 비율"].values[0])
         
-    elif topic == " 남녀 밸런스":
-        df_melted = pd.melt(df_regions, id_vars=['지역명'], 
-                            value_vars=['2026년04월_남자 인구수', '2026년04월_여자 인구수'],
-                            var_name='성별', value_name='인구수')
-        df_melted['성별'] = df_melted['성별'].str.replace('2026년04월_', '')
-        
-        fig = px.line(df_melted, x='지역명', y='인구수', color='성별', 
-                      title="🍿! ✧*｡", 
-                      markers=True,
-                      color_discrete_map={'남자 인구수': kitsch_blue, '여자 인구수': kitsch_pink})
-        fig.update_traces(line=dict(width=4), marker=dict(size=10))
-
-    # ⭐ [오류 해결 패치] 폰트 사양과 테마 스타일을 엄격하고 예쁘게 재정비!
-    fig.update_layout(
-        plot_bgcolor='rgba(255, 249, 251, 0.5)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        xaxis=dict(
-            showgrid=True, 
-            gridcolor='#ffe3ed', 
-            tickfont=dict(size=12, color='#333333', family='sans-serif')
-        ),
-        yaxis=dict(
-            showgrid=True, 
-            gridcolor='#ffe3ed',
-            tickfont=dict(size=12, color='#333333', family='sans-serif')
-        ),
-        title=dict(
-            font=dict(size=18, color='#ff007f', family='sans-serif')
-        )
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-    # 6. 비밀 옷장 데이터 필터
-    st.markdown("---")
-    st.markdown("### 💎 STEP 3. 갖고 싶은 지역만 요정 초이스 🧚‍♀️")
-    
-    chosen = st.multiselect("원하는 지역만 픽미픽미업! (텅 비워두면 전국 올패스!):", df_regions['지역명'].unique())
-    
-    final_df = df_regions[df_regions['지역명'].isin(chosen)] if chosen else df_regions
-    
-    st.dataframe(
-        final_df[['지역명', '2026년04월_총인구수', '2026년04월_세대수', '2026년04월_세대당 인구', '2026년04월_남자 인구수', '2026년04월_여자 인구수']], 
-        use_container_width=True
-    )
-    st.balloons() # 리로드 성공 축하풍선 팡팡!
-
-else:
-    st.info("💡 아기 요정님! 깃허브에 파일이 없거나 업로드가 안 되었어요. 상단의 박스에 CSV 파일을 쏙 넣어주세요! (기다리는 중... ⏱️✨)")
+        c1.metric(label="총 인구수", value=val1)
+        c2.metric(label="총 세대

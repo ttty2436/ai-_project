@@ -50,9 +50,40 @@ if df_source is not None:
         c1, c2, c3, c4 = st.columns(4)
         
         val1 = "{:,}".format(int(df_total["2026년04월_총인구수"].values[0]))
-        val2 = "{:,}".format(int(df_total["2026년04월_세대수'].values[0]))
+        val2 = "{:,}".format(int(df_total["2026년04월_세대수"].values[0]))
         val3 = "{:.2f}명".format(df_total["2026년04월_세대당 인구"].values[0])
         val4 = "{:.2f}".format(df_total["2026년04월_남여 비율"].values[0])
         
         c1.metric(label="총 인구수", value=val1)
-        c2.metric(label="총 세대
+        c2.metric(label="총 세대수", value=val2)
+        c3.metric(label="세대당 인구", value=val3)
+        c4.metric(label="남여 비율", value=val4)
+        
+    st.markdown("---")
+    
+    st.subheader("그래프 시각화")
+    topic = st.radio(
+        "지표 선택",
+        ["총인구수", "세대수", "남녀 인구 비교"],
+        horizontal=True
+    )
+    
+    if topic == "총인구수":
+        fig = px.bar(
+            df_regions, x="지역명", y="2026년04월_총인구수",
+            title="지역별 총 인구수",
+            template="plotly_dark"
+        )
+    elif topic == "세대수":
+        fig = px.bar(
+            df_regions, x="지역명", y="2026년04월_세대수",
+            title="지역별 총 세대수",
+            template="plotly_dark"
+        )
+    elif topic == "남녀 인구 비교":
+        df_melted = pd.melt(
+            df_regions, id_vars=["지역명"],
+            value_vars=["2026년04월_남자 인구수", "2026년04월_여자 인구수"],
+            var_name="성별", value_name="인구수"
+        )
+        df_melted["성별"] = df_melted["성별"].str.replace("20

@@ -5,7 +5,7 @@ import os
 
 # 🎀 1. 상큼키치 공주풍 페이지 세팅
 st.set_page_config(
-    page_title="🍭키치발랄 인구 스튜디오🍭", 
+    page_title="인구 스튜디오", 
     page_icon="🔮",
     layout="wide"
 )
@@ -123,7 +123,7 @@ if df_source is not None:
     
     topic = st.radio(
         "어떤 깜찍한 트렌드를 꺾은선으로 훔쳐볼까요? 👀",
-        ["🍭 영차영차 총인구수", "🔮 하트시그널 세대수", "🍟 체리블라썸 남녀 밸런스"],
+        ["총인구수", "세대수", " 남녀 밸런스"],
         horizontal=True
     )
 
@@ -134,7 +134,7 @@ if df_source is not None:
 
     if topic == "🍭 영차영차 총인구수":
         fig = px.line(df_regions, x='지역명', y='2026년04월_총인구수', 
-                      title="📈 [체리픽] 울트라 인구수 트렌드 라인 ✧*｡", 
+                      title="📈 인구수 트렌드 라인 ✧*｡", 
                       markers=True)
         fig.update_traces(
             line=dict(color=kitsch_pink, width=5), 
@@ -143,21 +143,21 @@ if df_source is not None:
         
     elif topic == "🔮 하트시그널 세대수":
         fig = px.line(df_regions, x='지역명', y='2026년04월_세대수', 
-                      title="💎 [반짝] 블링블링 세대수 트렌드 라인 ✧*｡", 
+                      title="세대수 트렌드 라인 ✧*｡", 
                       markers=True)
         fig.update_traces(
             line=dict(color=kitsch_purple, width=5), 
             marker=dict(size=12, color='#ffffff', line=dict(width=3, color=kitsch_purple))
         )
         
-    elif topic == "🍟 체리블라썸 남녀 밸런스":
+    elif topic == " 남녀 밸런스":
         df_melted = pd.melt(df_regions, id_vars=['지역명'], 
                             value_vars=['2026년04월_남자 인구수', '2026년04월_여자 인구수'],
                             var_name='성별', value_name='인구수')
         df_melted['성별'] = df_melted['성별'].str.replace('2026년04월_', '')
         
         fig = px.line(df_melted, x='지역명', y='인구수', color='성별', 
-                      title="🍿 [매칭] 소다보이 vs 피치걸 인구 크로스! ✧*｡", 
+                      title="🍿! ✧*｡", 
                       markers=True,
                       color_discrete_map={'남자 인구수': kitsch_blue, '여자 인구수': kitsch_pink})
         fig.update_traces(line=dict(width=4), marker=dict(size=10))

@@ -1,4 +1,4 @@
-import streamlit as st
+code = """import streamlit as st
 import pandas as pd
 import plotly.express as px
 import os
@@ -110,4 +110,12 @@ if df_source is not None:
     final_df = df_regions[df_regions["지역명"].isin(chosen)] if chosen else df_regions
     
     st.dataframe(
-        final_df
+        final_df[["지역명", "2026년04월_총인구수", "2026년04월_세대수", "2026년04월_세대당 인구", "2026년04월_남자 인구수", "2026년04월_여자 인구수"]],
+        use_container_width=True
+    )
+"""
+try:
+    compile(code, "filename", "exec")
+    print("No Syntax Error")
+except Exception as e:
+    print(f"Error: {e}")

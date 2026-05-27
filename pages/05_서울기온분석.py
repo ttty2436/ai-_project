@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# 스트림릿 클라우드(리눅스) 환경에서 한글 깨짐을 방지하기 위한 폰트 설정
+plt.rcParams['font.family'] = 'NanumGothic' or 'sans-serif'
+plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
+
 # 페이지 설정
 st.set_page_config(page_title="서울 역대 기온 조회기", page_icon="🌡️", layout="wide")
 
@@ -71,5 +75,24 @@ else:
         with col3:
             st.metric(label="관측 연도 수", value=f"{len(filtered_df)}개 연도")
 
-    # 그래프 그리기 (Matplotlib 설정)
-    fig, ax = plt
+    # 그래프 그리기 (Matplotlib 설정 호출 부분을 명확하게 고쳤습니다!)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    # 요구사항에 따른 색상 반영 (찐빨강: #B22222, 연한 파란색: #87CEFA)
+    ax.plot(filtered_df['연도'], filtered_df['최고기온(℃)'], color='#B22222', marker='o', linestyle='-', linewidth=2, label='최고기온')
+    ax.plot(filtered_df['연도'], filtered_df['최저기온(℃)'], color='#87CEFA', marker='o', linestyle='-', linewidth=2, label='최저기온')
+    
+    # 격자 및 라벨 디자인 수정
+    ax.grid(True, linestyle='--', alpha=0.5)
+    ax.set_xlabel('연도 (Year)', fontsize=11, labelpad=10)
+    ax.set_ylabel('기온 (℃)', fontsize=11, labelpad=10)
+    ax.set_title(f"역대 {selected_month}월 {selected_day}일의 기온 변화 추세", fontsize=14, pad=15)
+    ax.legend(loc='best', frameon=True, shadow=True)
+    
+    # 스트림릿 웹 화면에 그래프 출력
+    st.pyplot(fig)
+    
+    # 데이터 테이블 펼치기 기능 제공
+    with st.expander("🔍 상세 데이터 테이블 확인하기"):
+        display_df = filtered_df[['연도', '평균기온(℃)', '최저기온(℃)', '최고기온(℃)']].reset_index(drop=True)
+        st.dataframe(display_df, use_container_width=True)

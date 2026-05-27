@@ -86,4 +86,28 @@ if df_source is not None:
             value_vars=["2026년04월_남자 인구수", "2026년04월_여자 인구수"],
             var_name="성별", value_name="인구수"
         )
-        df_melted["성별"] = df_melted["성별"].str.replace("20
+        df_melted["성별"] = df_melted["성별"].str.replace("2026년04월_", "")
+        
+        fig = px.bar(
+            df_melted, x="지역명", y="인구수", color="성별",
+            title="지역별 남녀 인구 분포 (나란히 보기)",
+            barmode="group",
+            template="plotly_dark"
+        )
+        
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.1)"),
+        yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.1)")
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.markdown("---")
+    st.subheader("상세 데이터")
+    
+    chosen = st.multiselect("조회할 지역 선택 (미선택 시 전체 조회)", df_regions["지역명"].unique())
+    final_df = df_regions[df_regions["지역명"].isin(chosen)] if chosen else df_regions
+    
+    st.dataframe(
+        final_df

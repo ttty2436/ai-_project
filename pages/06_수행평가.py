@@ -9,7 +9,7 @@ st.title("🍻 술을 많이 마시는 나라가 더 행복할까?")
 st.subheader("나라별 알코올 소비량과 행복지수 상관관계 분석 (수행평가)")
 st.markdown("---")
 
-# 2. Load CSV Files (From root directory)
+# 2. Load CSV Files
 try:
     df_alc = pd.read_csv("alcohol_consumption_around_the_world.csv")
     df_hap = pd.read_csv("world-happiness-report-2024.csv")
@@ -25,70 +25,41 @@ try:
     df_alc['country'] = df_alc['country'].str.strip().str.lower()
     df_hap['country'] = df_hap['country'].str.strip().str.lower()
 
-    # Find relevant column names automatically
-    alc_col = [col for col in df_alc.columns if 'consumption' in col or 'total' in col or 'liter' in col][0]
-    hap_col = [col for col in df_hap.columns if 'score' in col or 'happiness' in col][0]
+    # [🔥 핵심 보완 1] 연도(Year) 컬럼 자동으로 매칭하기
+    alc_year_col = [col for col in df_alc.columns if 'year' in col or 'yr' in col or 'date' in col]
+    hap_year_col = [col for col in df_hap.columns if 'year' in col or 'yr' in col or 'date' in col]
 
-    # 3. Sidebar - Year Slider
-    st.sidebar.header("⚙️ 연도 선택")
-    common_years = sorted(list(set(df_alc['year'].unique()).intersection(set(df_hap['year'].unique()))))
-    
-    if common_years:
-        selected_year = st.sidebar.slider("📅 분석할 연도를 골라보세요", min_value=min(common_years), max_value=max(common_years), value=max(common_years))
-        df_alc_filtered = df_alc[df_alc['year'] == selected_year]
-        df_hap_filtered = df_hap[df_hap['year'] == selected_year]
-    else:
-        st.sidebar.warning("공통 연도가 없어 전체 평균으로 분석합니다.")
-        df_alc_filtered = df_alc
-        df_hap_filtered = df_hap
+    # [🔥 핵심 보완 2] 알코올 소비량 및 행복 점수 컬럼 매칭
+    alc_col = [col for col in df_alc.columns if 'consumption' in col or 'total' in col or 'liter' in col or 'alcohol' in col][0]
+    hap_col = [col for col in df_hap.columns if 'score' in col or 'happiness' in col or 'ladder' in col][0]
+
+    # 3. Sidebar - Year Filter (연도 컬럼이 양쪽 다 진짜 있을 때만 실행)
+    use_year_filter = False
+    if alc_year_col and hap_year_col:
+        a_yr = alc_year_col[0]
+        h_yr = hap_year_col[0]
+        
+        common_years = sorted(list(set(df_alc[a_yr].unique()).intersection(set(df_hap[h_yr].unique()))))
+        if common_years:
+            st.sidebar.header("⚙️ 연도 선택")
+            selected_year = st.sidebar.slider("📅 분석할 연도를 골라보세요", min_value=int(min(common_years)), max_value=int(max(common_years)), value=int(max(common_years)))
+            
+            df_alc_filtered = df_alc[df_alc[a_yr] == selected_year]
+            df_hap_filtered = df_hap[df_hap[h_yr] == selected_year]
+            use_year_filter = True
+            st.success(f" 현재 **{selected_year}년** 데이터를 분석 중입니다!")
+
+    # 만약 연도 컬럼이 없거나 매칭 실패 시 -> 국가별 평균값(Mean)으로 안전하게 진행!
+    if not use_year_filter:
+        st.sidebar.info("💡 데이터 특성에 맞춰 전체 평균 데이터로 분석을 진행합니다.")
+        df_alc_filtered = df_alc.groupby('country')[alc_col].mean().reset_index()
+        df_hap_filtered = df_hap.groupby('country')[hap_col].mean().reset_index()
 
     # 4. Chart 1: Line Chart (Global Trend)
     st.header("📈 1. 전 세계 알코올 소비량 추이")
-    df_trend = df_alc.groupby('year')[alc_col].mean().reset_index()
-    fig_line = px.line(df_trend, x='year', y=alc_col, title="연도별 전 세계 평균 알코올 소비량 변화", markers=True)
-    st.plotly_chart(fig_line, use_container_width=True)
-    st.markdown("---")
-
-    # 5. Chart 2: Bar Chart (Top 20 Countries & Highlight Korea)
-    st.header("📊 2. 술을 가장 많이 마시는 나라 Top 20")
-    df_top20 = df_alc_filtered.sort_values(by=alc_col, ascending=False).head(20)
-    
-    # Pure English logic for colors (No Korean text inside variables)
-    bar_colors = ['#E74C3C' if 'korea' in str(c) else '#34495E' for c in df_top20['country']]
-    fig_bar = px.bar(df_top20, x='country', y=alc_col, title="알코올 소비량 상위 20개국 (대한민국은 빨간색 🔴)")
-    fig_bar.update_traces(marker_color=bar_colors)
-    st.plotly_chart(fig_bar, use_container_width=True)
-    st.markdown("---")
-
-    # 6. Chart 3 & 4: Scatter Plot (Alcohol vs Happiness)
-    st.header("🎯 3. 알코올 소비량과 행복지수의 관계")
-    df_merged = pd.merge(df_alc_filtered, df_hap_filtered, on='country', how='inner')
-
-    if not df_merged.empty:
-        # Categorize for visualization using English labels
-        df_merged['group'] = df_merged['country'].apply(lambda x: 'Korea' if 'korea' in str(x) else 'Others')
-        
-        fig_scatter = px.scatter(
-            df_merged, x=alc_col, y=hap_col, color='group',
-            color_discrete_map={'Korea': '#E74C3C', 'Others': '#AED6F1'},
-            hover_name='country', title="알코올 소비량과 행복지수 산점도 (국가 이름은 마우스를 대보세요!)",
-            size=[16 if 'korea' in str(c) else 8 for c in df_merged['country']], size_max=16
-        )
-        st.plotly_chart(fig_scatter, use_container_width=True)
-        
-        # 7. Correlation & Dynamic Conclusion (Korean only in st.write)
-        corr_value = df_merged[alc_col].corr(df_merged[hap_col])
-        st.subheader("💡 데이터 분석 결론")
-        st.write(f"두 데이터의 상관계수는 **{corr_value:.2f}** 입니다.")
-        
-        if corr_value > 0.2:
-            st.info("✨ **결론:** 술을 많이 마시는 나라가 더 행복한 경향이 있네요!")
-        elif corr_value < -0.2:
-            st.info("✨ **결론:** 술을 많이 마시는 나라일수록 덜 행복한 경향이 있네요!")
-        else:
-            st.info("✨ **결론:** 술 소비량과 행복지수 사이에는 뚜렷한 관계가 없어요. 행복은 술이 아닌 다른 게 결정하나 봐요! 🎉")
+    if alc_year_col:
+        df_trend = df_alc.groupby(alc_year_col[0])[alc_col].mean().reset_index()
+        fig_line = px.line(df_trend, x=alc_year_col[0], y=alc_col, title="연도별 전 세계 평균 알코올 소비량 변화", markers=True)
+        st.plotly_chart(fig_line, use_container_width=True)
     else:
-        st.error("데이터 매칭에 실패했습니다.")
-
-except FileNotFoundError:
-    st.error("⚠️ [파일 에러] CSV 파일 이름을 찾을 수 없어요! 깃허브 최상위 폴더에 파일이 제대로 있는지 꼭 확인해 주세요.")
+        st.info("💡 데이터에 연도 정보가 없어 추

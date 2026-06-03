@@ -5,7 +5,7 @@ import plotly.express as px
 st.set_page_config(page_title="Dataset Analysis", layout="wide")
 
 st.title("Alcohol and Happiness Analysis")
-st.write("나라별 알코올 소비량과 행복지수 상관관계 분석")
+st.write("Correlation analysis between alcohol consumption and happiness score.")
 st.write("---")
 
 try:
@@ -66,4 +66,39 @@ try:
     if alc_year_col != "":
         df_trend = df_alc.groupby(alc_year_col)[alc_col].mean().reset_index()
         fig_line = px.line(df_trend, x=alc_year_col, y=alc_col, title="Trend", markers=True)
-        st.plotly_chart(fig_line, use_
+        st.plotly_chart(fig_line, use_container_width=True)
+    st.write("---")
+
+    st.subheader("2. Top 20 Alcohol Consumption Countries")
+    df_top20 = df_alc_filtered.sort_values(by=alc_col, ascending=False).head(20)
+    
+    bar_colors = []
+    for c in df_top20["country"]:
+        if "korea" in str(c):
+            bar_colors.append("#E74C3C")
+        else:
+            bar_colors.append("#34495E")
+            
+    fig_bar = px.bar(df_top20, x="country", y=alc_col, title="Top 20")
+    fig_bar.update_traces(marker_color=bar_colors)
+    st.plotly_chart(fig_bar, use_container_width=True)
+    st.write("---")
+
+    st.subheader("3. Alcohol vs Happiness Scatter Plot")
+    df_merged = pd.merge(df_alc_filtered, df_hap_filtered, on="country", how="inner")
+    df_merged = df_merged.dropna(subset=[alc_col, hap_col])
+
+    if not df_merged.empty:
+        df_group = []
+        df_size = []
+        for c in df_merged["country"]:
+            if "korea" in str(c):
+                df_group.append("Korea")
+                df_size.append(18)
+            else:
+                df_group.append("Others")
+                df_size.append(8)
+                
+        df_merged["group"] = df_group
+        
+        fig_scatter
